@@ -129,25 +129,112 @@ def create_excel_report(root_folder):
     return buffer.getvalue(), len(items)
 
 # Streamlit App
-st.title("Folder Scanner")
-st.write("Scan a folder structure and download the report as an Excel file.")
+st.set_page_config(page_title="Folder Scanner", layout="wide")
+st.title("📁 Folder Scanner SaaS")
+st.write("Scan folder structures and download reports as Excel files.")
 
-root_folder = st.text_input("Enter the root folder path to scan (e.g., C:\\Users\\YourName\\Documents):")
-output_name = st.text_input("Enter the output Excel file name:", "folder_structure.xlsx")
+# Create tabs
+tab1, tab2 = st.tabs(["📍 Local Use", "ℹ️ Information"])
 
-if st.button("Generate Report"):
-    if root_folder:
-        try:
-            excel_bytes, total_items = create_excel_report(root_folder)
-            st.success(f"Report generated successfully! Total items found: {total_items}")
-            st.download_button(
-                label="Download Excel Report",
-                data=excel_bytes,
-                file_name=output_name,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="download_excel"
-            )
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-    else:
-        st.error("Please enter a valid root folder path.")
+with tab1:
+    st.subheader("Scan Your Local Folder")
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.info("⚠️ **Important**: This deployed version works best when run locally on your machine. If you're on Streamlit Cloud, please run this app locally to access your folders.")
+        
+        root_folder = st.text_input(
+            "Enter the root folder path to scan",
+            placeholder="e.g., C:\\Users\\YourName\\Documents or D:\\KI\\02. Client Projects",
+            help="Use forward slashes (/) or backslashes (\\). Backslashes need to be properly escaped."
+        )
+        
+        output_name = st.text_input(
+            "Output Excel file name",
+            value="folder_structure.xlsx",
+            help="Give your report a meaningful name"
+        )
+    
+    with col2:
+        st.write("**Path Formats:**")
+        st.code("Windows:\nD:/KI/02. Client Projects\nor\nD:\\\\KI\\\\02. Client Projects\n\nMac/Linux:\n/Users/YourName/Documents")
+    
+    if st.button("🔍 Generate Report", use_container_width=True):
+        if root_folder:
+            with st.spinner("Scanning folder..."):
+                try:
+                    # Normalize path
+                    normalized_path = root_folder.replace('\\', '/')
+                    excel_bytes, total_items = create_excel_report(normalized_path)
+                    
+                    st.success(f"✅ Report generated successfully!")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Total Items", total_items)
+                    
+                    st.download_button(
+                        label="⬇️ Download Excel Report",
+                        data=excel_bytes,
+                        file_name=output_name,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key="download_excel",
+                        use_container_width=True
+                    )
+                except ValueError as e:
+                    st.error(f"❌ Folder Not Found: {str(e)}")
+                    st.info("💡 Make sure the folder path is correct and accessible from your computer.")
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    st.info("💡 Try using forward slashes (/) in the path instead of backslashes.")
+        else:
+            st.warning("Please enter a valid folder path.")
+
+with tab2:
+    st.subheader("How to Use")
+    st.markdown("""
+    ### Deployment Options
+    
+    **Option 1: Run Locally (Recommended)**
+    - Install Python 3.7+
+    - Run: `pip install -r requirements.txt`
+    - Run: `streamlit run folder_scanner.py`
+    - Access at http://localhost:8501
+    - ✅ Can access local folders and network drives
+    
+    **Option 2: Streamlit Cloud (Current)**
+    - Visit the GitHub repo and deploy independently
+    - ⚠️ Cannot access your local file system
+    - Best for testing the interface
+    
+    ### Features
+    - 📊 Scan any folder structure recursively
+    - 🏷️ Automatic file type classification
+    - 📈 Detailed Excel reports with formatting
+    - 🎯 Organized by folder level and parent folder
+    - ⚡ Fast processing for large directories
+    
+    ### GitHub Repository
+    - **Repository**: https://github.com/satish1987feb/Folder_Scanner
+    - Clone and run locally for full functionality
+    """)
+    
+    st.subheader("File Type Categories")
+    categories = {
+        "Excel": ".xlsx, .xls, .xlsm, .xlsb",
+        "PDF": ".pdf",
+        "Word": ".doc, .docx",
+        "PowerPoint": ".ppt, .pptx, .pptm",
+        "Images": ".jpg, .jpeg, .png, .gif, .bmp",
+        "Videos": ".mp4, .avi, .mov, .mkv",
+        "Audio": ".mp3, .wav, .flac",
+        "Archives": ".zip, .rar, .7z, .tar, .gz",
+    }
+    
+    col1, col2 = st.columns(2)
+    for idx, (category, exts) in enumerate(categories.items()):
+        if idx % 2 == 0:
+            with col1:
+                st.text(f"**{category}**: {exts}")
+        else:
+            with col2:
+                st.text(f"**{category}**: {exts}")
