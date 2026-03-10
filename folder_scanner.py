@@ -129,7 +129,7 @@ def create_excel_report(root_folder):
     return buffer.getvalue(), len(items)
 
 # Streamlit App
-st.title("Folder Scanner SaaS")
+st.title("Folder Scanner")
 st.write("Scan a folder structure and download the report as an Excel file.")
 
 root_folder = st.text_input("Enter the root folder path to scan (e.g., C:\\Users\\YourName\\Documents):")
