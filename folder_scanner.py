@@ -116,28 +116,32 @@ st.markdown("""
 
     .app-header { text-align: center; margin-bottom: 2rem; }
     .app-header h1 { font-size: 2.2rem; margin-bottom: 0.2rem; }
-    .app-header p { color: #888; font-size: 1.05rem; }
+    .app-header p { opacity: 0.6; font-size: 1.05rem; }
 
     .folder-path-box {
-        background: #f0f2f6; border: 1px solid #d0d3da; border-radius: 8px;
-        padding: 0.75rem 1rem; font-size: 0.95rem; margin: 0.5rem 0 1rem 0;
-        word-break: break-all; min-height: 1.2rem; color: #333;
-    }
-    [data-testid="stAppViewBlockContainer"] [data-testid="stMarkdown"] .folder-path-box {
-        background: #f0f2f6;
+        background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.2);
+        border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.95rem;
+        margin: 0.5rem 0 1rem 0; word-break: break-all; min-height: 1.2rem;
     }
 
     .result-card {
-        background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-        border: 1px solid #a5d6a7; border-radius: 10px;
-        padding: 1.2rem; text-align: center; margin: 1rem 0;
+        background: linear-gradient(135deg, #1b5e20, #2e7d32);
+        border-radius: 12px; padding: 1.5rem; text-align: center; margin: 1rem 0;
     }
-    .result-card h2 { margin: 0; font-size: 2rem; color: #2e7d32; }
-    .result-card p { margin: 0.2rem 0 0 0; color: #555; font-size: 0.9rem; }
+    .result-card h2 { margin: 0; font-size: 2.4rem; color: #fff; font-weight: 700; }
+    .result-card p { margin: 0.3rem 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.95rem; }
 
     div[data-testid="stMetric"] {
-        background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px;
-        padding: 0.8rem; text-align: center;
+        background: rgba(128,128,128,0.08);
+        border: 1px solid rgba(128,128,128,0.15);
+        border-radius: 10px; padding: 1rem 0.8rem; text-align: center;
+    }
+    div[data-testid="stMetric"] label {
+        font-size: 0.8rem !important; text-transform: uppercase;
+        letter-spacing: 0.05em; opacity: 0.6;
+    }
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important; font-weight: 700 !important;
     }
 
     section[data-testid="stSidebar"] { display: none; }
