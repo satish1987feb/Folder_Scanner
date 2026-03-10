@@ -53,7 +53,7 @@ DOWNLOAD .EXE: https://github.com/satish1987feb/Folder_Scanner/releases
 **What to show on screen:**
 - Quick preview of the final Excel report (open a sample .xlsx)
 - Quick flash of the desktop app UI
-- Quick flash of the Streamlit web UI
+- Quick flash of the Streamlit web UI (single page with Browse button)
 
 ---
 
@@ -293,9 +293,11 @@ st.title("📁 Folder Scanner")
 st.write("Scan any folder structure and download a detailed Excel report.")
 ```
 
-- "Streamlit makes it dead simple — `st.text_input` for the path,
-  `st.button` to trigger the scan, `st.download_button` for the Excel file."
-- Build up the UI step by step (show the tabs, input fields, button, download)
+- "Streamlit makes it dead simple — a Browse button opens a native
+  folder picker, then one click to generate, and a download button
+  for the Excel file."
+- Build up the single-page UI step by step (Browse button, path display,
+  generate button, results with metrics and preview, download)
 
 **What to demo:**
 
@@ -304,7 +306,9 @@ streamlit run folder_scanner.py
 ```
 
 - Browser opens at localhost:8501
-- Paste a folder path → Generate → Download → Open the Excel
+- Click Browse → pick a folder from the native dialog
+- Click Generate Report → see metrics (folders, files, file types)
+- Expand the preview to see the data → click Download
 - "That's the developer version — runs in your browser, full control."
 
 ---

@@ -1,4 +1,6 @@
 import os
+import tkinter as tk
+from tkinter import filedialog
 import pandas as pd
 from pathlib import Path
 import io
@@ -92,114 +94,169 @@ def create_excel_report(root_folder):
             cell.font = header_font
 
     buffer.seek(0)
-    return buffer.getvalue(), len(items)
+    return buffer.getvalue(), len(items), df
+
+
+def open_folder_dialog():
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    folder = filedialog.askdirectory(master=root, title="Select a folder to scan")
+    root.destroy()
+    return folder
 
 
 # ─── Streamlit App ───────────────────────────────────────────────────────────
 
-st.set_page_config(page_title="Folder Scanner", page_icon="📁", layout="wide")
+st.set_page_config(page_title="Folder Scanner", page_icon="📁", layout="centered")
 
-st.title("📁 Folder Scanner")
-st.write("Scan any folder structure and download a detailed Excel report.")
+st.markdown("""
+<style>
+    .block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 720px; }
 
-tab_scan, tab_info = st.tabs(["📊 Scan Folder", "ℹ️ About"])
+    .app-header { text-align: center; margin-bottom: 2rem; }
+    .app-header h1 { font-size: 2.2rem; margin-bottom: 0.2rem; }
+    .app-header p { color: #888; font-size: 1.05rem; }
 
-# ── Tab 1: Scan ──────────────────────────────────────────────────────────────
-
-with tab_scan:
-    col_input, col_help = st.columns([2, 1])
-
-    with col_input:
-        root_folder = st.text_input(
-            "Folder path to scan",
-            placeholder="e.g., C:\\Users\\YourName\\Documents",
-            help="Paste the full folder path from File Explorer."
-        )
-        output_name = st.text_input(
-            "Report file name",
-            value="folder_structure.xlsx",
-        )
-
-    with col_help:
-        st.markdown("**How to copy a folder path:**")
-        st.markdown(
-            "1. Open the folder in **File Explorer**\n"
-            "2. Click the **address bar** at the top\n"
-            "3. Press **Ctrl+C** to copy\n"
-            "4. Paste it here"
-        )
-
-    if st.button("📊 Generate Report", use_container_width=True):
-        if root_folder:
-            with st.spinner("Scanning folder..."):
-                try:
-                    normalized_path = root_folder.strip().replace('\\', '/')
-                    excel_bytes, total_items = create_excel_report(normalized_path)
-
-                    st.success(f"Scan complete! Found **{total_items}** items.")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Total Items", total_items)
-
-                    st.download_button(
-                        label="⬇️ Download Excel Report",
-                        data=excel_bytes,
-                        file_name=output_name,
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        use_container_width=True,
-                    )
-                except ValueError as e:
-                    st.error(f"Folder not found: {e}")
-                    st.info("Make sure the folder path is correct and accessible.")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-                    st.info("Try using forward slashes (/) in the path.")
-        else:
-            st.warning("Please enter a folder path.")
-
-# ── Tab 2: About ─────────────────────────────────────────────────────────────
-
-with tab_info:
-    st.markdown("""
-### What This App Does
-
-Scans any folder on your computer recursively and generates a formatted Excel
-report listing every file and subfolder with its type, depth level, and location.
-
-### What's in the Report?
-
-| Column | Description |
-|--------|-------------|
-| **Name** | File or folder name |
-| **Type** | Auto-detected category (Excel, PDF, Image, etc.) |
-| **Level** | Depth in the folder tree |
-| **Parent Folder** | The containing folder |
-| **Full Path** | Complete path to the item |
-
-### Supported File Types
-    """)
-
-    categories = {
-        "Excel": ".xlsx, .xls, .xlsm, .xlsb",
-        "PDF": ".pdf",
-        "Word": ".doc, .docx",
-        "PowerPoint": ".ppt, .pptx, .pptm",
-        "Images": ".jpg, .jpeg, .png, .gif, .bmp, .svg, .webp",
-        "Videos": ".mp4, .avi, .mov, .mkv",
-        "Audio": ".mp3, .wav, .flac",
-        "Archives": ".zip, .rar, .7z, .tar, .gz",
-        "Code": ".py, .js, .html, .css, .java, .cpp, .c, .ts",
-        "Data": ".csv, .json, .xml",
+    .folder-path-box {
+        background: #f0f2f6; border: 1px solid #d0d3da; border-radius: 8px;
+        padding: 0.75rem 1rem; font-size: 0.95rem; margin: 0.5rem 0 1rem 0;
+        word-break: break-all; min-height: 1.2rem; color: #333;
+    }
+    [data-testid="stAppViewBlockContainer"] [data-testid="stMarkdown"] .folder-path-box {
+        background: #f0f2f6;
     }
 
-    col1, col2 = st.columns(2)
-    for idx, (category, exts) in enumerate(categories.items()):
-        target = col1 if idx % 2 == 0 else col2
-        with target:
-            st.markdown(f"**{category}**: {exts}")
+    .result-card {
+        background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+        border: 1px solid #a5d6a7; border-radius: 10px;
+        padding: 1.2rem; text-align: center; margin: 1rem 0;
+    }
+    .result-card h2 { margin: 0; font-size: 2rem; color: #2e7d32; }
+    .result-card p { margin: 0.2rem 0 0 0; color: #555; font-size: 0.9rem; }
 
-    st.markdown("---")
-    st.markdown(
-        "**GitHub**: [github.com/satish1987feb/Folder_Scanner]"
-        "(https://github.com/satish1987feb/Folder_Scanner)"
+    div[data-testid="stMetric"] {
+        background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px;
+        padding: 0.8rem; text-align: center;
+    }
+
+    section[data-testid="stSidebar"] { display: none; }
+</style>
+""", unsafe_allow_html=True)
+
+# ── Header ────────────────────────────────────────────────────────────────────
+
+st.markdown("""
+<div class="app-header">
+    <h1>📁 Folder Scanner</h1>
+    <p>Select a folder, generate a formatted Excel report.</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ── Session state ─────────────────────────────────────────────────────────────
+
+if "folder_path" not in st.session_state:
+    st.session_state.folder_path = ""
+if "scan_result" not in st.session_state:
+    st.session_state.scan_result = None
+
+# ── Folder selection ──────────────────────────────────────────────────────────
+
+st.markdown("##### Select Folder")
+
+col_btn, col_name = st.columns([1, 2])
+
+with col_btn:
+    if st.button("📂 Browse Folder", use_container_width=True):
+        folder = open_folder_dialog()
+        if folder:
+            st.session_state.folder_path = folder
+            st.session_state.scan_result = None
+
+with col_name:
+    output_name = st.text_input(
+        "Report file name",
+        value="folder_structure.xlsx",
+        label_visibility="collapsed",
+        placeholder="Report file name (e.g. folder_structure.xlsx)",
     )
+
+selected = st.session_state.folder_path
+if selected:
+    st.markdown(f'<div class="folder-path-box">📁 {selected}</div>', unsafe_allow_html=True)
+else:
+    st.markdown(
+        '<div class="folder-path-box" style="color:#999;">No folder selected — click Browse to pick one</div>',
+        unsafe_allow_html=True,
+    )
+
+# ── Generate ──────────────────────────────────────────────────────────────────
+
+st.markdown("")  # spacer
+
+if st.button("📊 Generate Report", use_container_width=True, type="primary"):
+    if not selected:
+        st.warning("Please select a folder first.")
+    else:
+        with st.spinner("Scanning..."):
+            try:
+                normalized = selected.strip().replace('\\', '/')
+                excel_bytes, total_items, df = create_excel_report(normalized)
+                st.session_state.scan_result = {
+                    "bytes": excel_bytes,
+                    "count": total_items,
+                    "df": df,
+                    "folder": Path(selected).name,
+                }
+            except ValueError as e:
+                st.error(f"**Error:** {e}")
+            except Exception as e:
+                st.error(f"**Unexpected error:** {e}")
+
+# ── Results ───────────────────────────────────────────────────────────────────
+
+result = st.session_state.scan_result
+if result:
+    st.markdown("---")
+
+    st.markdown(
+        f'<div class="result-card">'
+        f'<h2>{result["count"]}</h2>'
+        f'<p>items found in <strong>{result["folder"]}</strong></p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Summary metrics
+    type_counts = result["df"]["Type"].value_counts()
+    folders = type_counts.get("Folder", 0)
+    files = result["count"] - folders
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Folders", f"{folders:,}")
+    c2.metric("Files", f"{files:,}")
+    c3.metric("File Types", f"{len(type_counts):,}")
+
+    # Preview
+    with st.expander("Preview report", expanded=False):
+        st.dataframe(result["df"].head(50), use_container_width=True, hide_index=True)
+
+    # Download
+    st.download_button(
+        label="⬇️  Download Excel Report",
+        data=result["bytes"],
+        file_name=output_name if output_name.endswith(".xlsx") else output_name + ".xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+    )
+
+# ── Footer ────────────────────────────────────────────────────────────────────
+
+st.markdown("---")
+st.markdown(
+    '<p style="text-align:center; color:#999; font-size:0.82rem;">'
+    'Folder Scanner &nbsp;·&nbsp; '
+    '<a href="https://github.com/satish1987feb/Folder_Scanner" style="color:#999;">GitHub</a>'
+    '</p>',
+    unsafe_allow_html=True,
+)
